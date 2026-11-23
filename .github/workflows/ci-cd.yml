@@ -116,6 +116,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: the-five-factions-build
+          include-hidden-files: true
           path: |
             frontend/.next/**
             !frontend/.next/cache/**
@@ -147,6 +148,13 @@ jobs:
         with:
           name: the-five-factions-build
           path: .
+
+      - name: Verify extracted artifacts
+        run: |
+          echo "Directory contents:"
+          ls -la
+          if [ -d ".vercel" ]; then echo ".vercel contents:"; ls -la .vercel; fi
+          if [ -d ".vercel/output" ]; then echo ".vercel/output contents:"; ls -la .vercel/output; fi
 
       - name: Deploy Prebuilt Application to Vercel
         env:
