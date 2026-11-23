@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { isNotificationEmailConfigured, sendNotificationEmail } from "@/lib/notifications/email";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export const runtime = "nodejs";
-
 export async function POST(request: Request) {
   const secret = process.env.NOTIFICATION_CRON_SECRET;
   if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
