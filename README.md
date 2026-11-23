@@ -1,6 +1,20 @@
 # The Five Factions
 
+[![CI/CD](https://github.com/Zavsek/TheFiveFactions/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Zavsek/TheFiveFactions/actions/workflows/ci-cd.yml)
+
 The Five Factions je spletna aplikacija za razvijanje petih vrlin z izbirnimi ločinami, tedenskimi nalogami, skupnostnim preverjanjem dokazil ter spremljanjem ranga in streaka. Uporabnik lahko razvija eno ali več ločin: **Altruism**, **Intellect**, **Grit**, **Harmony** in **Verity**.
+
+## CI/CD Cevovod in Produkcija
+
+- **Povezava do nameščene aplikacije:** [https://the-five-factions.vercel.app](https://the-five-factions.vercel.app)
+- **Status cevovoda:** [GitHub Actions pregled](https://github.com/Zavsek/TheFiveFactions/actions/workflows/ci-cd.yml)
+
+### Faze CI/CD cevovoda (`.github/workflows/ci-cd.yml`)
+
+1. **Lint (`lint`):** Preverjanje sloga kode z ESLint ter statično preverjanje tipov s TypeScript (`tsc --noEmit`). Če se odkrijejo slogovne ali tipske napake, se izvajanje nemudoma prekine.
+2. **Test (`test`):** Zagon 26 avtomatiziranih enotskih testov (frontend validacija registracije, backend logika dodeljevanja nalog, slovensko formatiranje datumov in API endpointi) z orodjem Vitest. Generira poročilo o pokritosti kode (coverage report), ki se shrani kot GitHub artefakt. Če kateri koli test pade, se cevovod ustavi.
+3. **Gradnja in caching (`build`):** Uporaba predpomnjenja odvisnosti (`npm cache` preko `actions/setup-node`) in Next.js gradnje (`.next/cache`). Izvede se optimizirana produkcijska gradnja aplikacije (`npm run build`). Pripravljeni artefakti gradnje se shranijo z `actions/upload-artifact`.
+4. **Namestitev (`deploy`):** Samodejna namestitev na produkcijsko platformo Vercel. Job se sproži **izključno ob potisku (`push`) na vejo `main`** in samo, če so uspešno zaključeni jobi `lint`, `test` in `build`. Aplikacija se v tej fazi ne gradi ponovno, ampak uporabi shranjene artefakte iz faze gradnje (`actions/download-artifact`). Uporablja varno GitHub okolje `production` in ustrezne GitHub skrivnosti (Secrets).
 
 ## Tehnološki pregled
 

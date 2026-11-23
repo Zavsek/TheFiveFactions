@@ -242,7 +242,7 @@ otp_expiry = 3600
 # Signup confirmation emails are sent through the configured SMTP provider.
 # Keep credentials in supabase/.env.local (never commit that file).
 [auth.email.smtp]
-enabled = true
+enabled = false
 host = "env(AUTH_SMTP_HOST)"
 port = 587
 user = "env(AUTH_SMTP_USER)"
