@@ -111,6 +111,8 @@ jobs:
           else
             npm run build
           fi
+          echo "Build check in frontend:"
+          if [ -d ".vercel/output" ]; then echo ".vercel/output exists!"; ls -la .vercel/output; fi
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -118,10 +120,9 @@ jobs:
           name: the-five-factions-build
           include-hidden-files: true
           path: |
-            frontend/.next/**
-            !frontend/.next/cache/**
-            frontend/.vercel/**
-            frontend/public/**
+            frontend/.next
+            frontend/.vercel
+            frontend/public
             frontend/package.json
             frontend/package-lock.json
             frontend/next.config.ts
@@ -147,14 +148,22 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: the-five-factions-build
-          path: .
+          path: frontend
 
-      - name: Verify extracted artifacts
+      - name: Verify and ensure artifacts location
         run: |
-          echo "Directory contents:"
+          if [ -d "../.vercel/output" ] && [ ! -d ".vercel/output" ]; then
+            echo "Copying .vercel from parent directory..."
+            cp -r ../.vercel .
+          fi
+          if [ -d "frontend/.vercel/output" ] && [ ! -d ".vercel/output" ]; then
+            echo "Moving .vercel from nested frontend directory..."
+            cp -r frontend/.vercel .
+          fi
+          echo "Directory contents of $(pwd):"
           ls -la
-          if [ -d ".vercel" ]; then echo ".vercel contents:"; ls -la .vercel; fi
-          if [ -d ".vercel/output" ]; then echo ".vercel/output contents:"; ls -la .vercel/output; fi
+          if [ -d ".vercel" ]; then ls -la .vercel; fi
+          if [ -d ".vercel/output" ]; then ls -la .vercel/output; fi
 
       - name: Deploy Prebuilt Application to Vercel
         env:
