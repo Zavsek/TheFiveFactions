@@ -24,7 +24,8 @@ async function AccountPageContent({
 }) {
   await connection();
   const supabase = await createClient();
-  const { data: { user }, error } = await supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getUser();
+  const user = data?.user;
   if (error || !user) redirect("/login?status=required");
 
   const { data: profile } = await supabase
