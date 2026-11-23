@@ -11,8 +11,14 @@ const factions = ["Altruism", "Intellect", "Grit", "Harmony", "Verity"];
 
 async function HomeContent() {
   await connection();
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
+    user = data?.user ?? null;
+  } catch {
+    user = null;
+  }
   if (user) redirect("/account");
 
   return (
