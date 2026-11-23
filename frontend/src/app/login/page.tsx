@@ -10,8 +10,6 @@ export const metadata: Metadata = {
   description: "Prijavi se v svoj račun",
 };
 
-export const dynamic = "force-static";
-
 async function LoginPageContent({
   searchParams,
 }: {

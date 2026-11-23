@@ -105,27 +105,26 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || 'team_WNFML16cjligAGl25DDmk76k' }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID || 'prj_jXKLvUTDCcblTmoLSxnfeARDjpwA' }}
         run: |
-          if [ -n "$VERCEL_TOKEN" ]; then
-            npx vercel pull --yes --environment=production --token=$VERCEL_TOKEN
-            npx vercel build --prod --token=$VERCEL_TOKEN
+          if [ -n "$VERCEL_TOKEN" ] && { [ "$GITHUB_EVENT_NAME" = "push" ] || [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; }; then
+            npx vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+            npx vercel build --prod --token="$VERCEL_TOKEN"
           else
             npm run build
           fi
-          echo "Build check in frontend:"
-          if [ -d ".vercel/output" ]; then echo ".vercel/output exists!"; ls -la .vercel/output; fi
+
+      - name: Archive build output (preserving symlinks)
+        run: |
+          EXTRA_PATHS=""
+          if [ -d ".vercel/output" ]; then
+            EXTRA_PATHS=".vercel/output .vercel/project.json"
+          fi
+          tar --exclude='.next/cache' -czf build-artifact.tar.gz .next public package.json package-lock.json next.config.ts $EXTRA_PATHS
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: the-five-factions-build
-          include-hidden-files: true
-          path: |
-            frontend/.next
-            frontend/.vercel
-            frontend/public
-            frontend/package.json
-            frontend/package-lock.json
-            frontend/next.config.ts
+          path: frontend/build-artifact.tar.gz
           if-no-files-found: error
 
   deploy:
@@ -160,20 +159,13 @@ jobs:
           name: the-five-factions-build
           path: frontend
 
-      - name: Verify and ensure artifacts location
+      - name: Extract Build Artifacts (preserving symlinks)
         run: |
-          if [ -d "../.vercel/output" ] && [ ! -d ".vercel/output" ]; then
-            echo "Copying .vercel from parent directory..."
-            cp -r ../.vercel .
-          fi
-          if [ -d "frontend/.vercel/output" ] && [ ! -d ".vercel/output" ]; then
-            echo "Moving .vercel from nested frontend directory..."
-            cp -r frontend/.vercel .
-          fi
-          echo "Directory contents of $(pwd):"
-          ls -la
-          if [ -d ".vercel" ]; then ls -la .vercel; fi
-          if [ -d ".vercel/output" ]; then ls -la .vercel/output; fi
+          tar -xzf build-artifact.tar.gz
+          rm -f build-artifact.tar.gz
+          REAL_FUNCS=$(find .vercel/output/functions -name "*.func" -type d | wc -l)
+          SYMLINK_FUNCS=$(find .vercel/output/functions -name "*.func" -type l | wc -l)
+          echo "Real Serverless Functions: $REAL_FUNCS, Symlinked route aliases: $SYMLINK_FUNCS"
 
       - name: Deploy Prebuilt Application to Vercel
         env:
@@ -181,4 +173,4 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID || 'team_WNFML16cjligAGl25DDmk76k' }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID || 'prj_jXKLvUTDCcblTmoLSxnfeARDjpwA' }}
         run: |
-          npx vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+          npx vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN"

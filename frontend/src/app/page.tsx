@@ -1,14 +1,25 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { connection } from "next/server";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import { AuthLoading } from "@/app/auth-loading";
 import { FactionIcon } from "@/components/faction-icon";
 import { FactionsLogo } from "@/components/factions-logo";
 
 const factions = ["Altruism", "Intellect", "Grit", "Harmony", "Verity"];
 
-export const dynamic = "force-static";
-
-function HomeContent() {
+async function HomeContent() {
+  await connection();
+  let user = null;
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.auth.getUser();
+    user = data?.user ?? null;
+  } catch {
+    user = null;
+  }
+  if (user) redirect("/account");
 
   return (
     <main className="retro-site min-h-screen">
